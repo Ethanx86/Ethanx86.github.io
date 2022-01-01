@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<style>
+canvas {
+    border:1px solid #d3d3d3;
+    background-color: #000000;
+}
+</style>
+</head>
+<body onload="startGame()">
+<script>
+var player;
+var obstacles;
+var points;
+var score;
+
+function startGame() {
+    player = new component(20, 20, 'red', 480/2, 220);
+    points = 0;
+    score = new component("30px", "Consolas", 'white', 50, 50, 'text');
+    obstacles = [];
+    myGameArea.start();
+  }
+  
+  var myGameArea = {
+    canvas : document.createElement("canvas"),
+    start : function() {
+      this.canvas.width = 480;
+      this.canvas.height = 270;
+      this.context = this.canvas.getContext("2d");
+      document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+      this.interval = setInterval(updateGameArea, 20);
+      window.addEventListener('mousemove', function (e) {
+        myGameArea.x = e.pageX;
+        myGameArea.y = e.pageY;
+      })
+      window.addEventListener('touchmove', function (e) {
+        myGameArea.x = e.touches[0].screenX;
+        myGameArea.y = e.touches[0].screenY;
+      })
+      this.frameNo = 0;
+    },
+    clear : function() {
+      this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    },
+    stop : function() {
+    clearInterval(this.interval);
+  }
+  };
+  function everyinterval(n) {
+  if ((myGameArea.frameNo / n) % 1 == 0) {return true;}
+  return false;
+}
+  function component(width, height, color, x, y, type) {
+    this.width = width;
+    this.type = type;
+    this.height = height;
+    this.x = x;
+    this.y = y;
+    this.update = function(){
+        ctx = myGameArea.context;
+            ctx.fillStyle = color;
+        if(this.type == "text"){
+            ctx.font = this.width + " " + this.height;
+            ctx.fillText(this.text, this.x, this.y);
+        }else{
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+        }
+    }
+    this.crashWith = function(otherobj) {
+    var myleft = this.x;
+    var myright = this.x + (this.width);
+    var mytop = this.y;
+    var mybottom = this.y + (this.height);
+    var otherleft = otherobj.x;
+    var otherright = otherobj.x + (otherobj.width);
+    var othertop = otherobj.y;
+    var otherbottom = otherobj.y + (otherobj.height);
+    var crash = true;
+    if ((mybottom < othertop) ||
+    (mytop > otherbottom) ||
+    (myright < otherleft) ||
+    (myleft > otherright)) {
+      crash = false;
+    }
+    return crash;
+  }
+  }
+  function updateGameArea() {
+    myGameArea.clear();
+    var minGap = 50;
+    var maxGap = 200;
+    var gap;
+    var minHeight = 20;
+    var maxHeight = 200;
+    var height;
+    if(everyinterval(70)){
+        gap = Math.floor(Math.random()*(maxGap-minGap+1)+minGap);
+        height = Math.floor(Math.random()*(maxHeight-minHeight+1)+minHeight);
+        obstacles.push(new component(height, 20, '#f800c2', 0, 20));
+        obstacles.push(new component(myGameArea.canvas.width - height - gap, 20, '#f800c2', height + gap, 20));
+    }
+    obstacles.forEach(element => {
+        if(element.crashWith(player)){
+            myGameArea.stop();
+        }
+    });
+    obstacles.forEach(element => {
+        element.y++;
+    });
+    obstacles.forEach(element => {
+        element.update();
+    });
+    if (myGameArea.x && myGameArea.y) {
+    player.x = myGameArea.x;
+  }
+    myGameArea.frameNo++;
+    score.text = "SCORE: " + myGameArea.frameNo;
+    score.update();
+    player.update();
+  }
+</script>
+</body>
+</html>
